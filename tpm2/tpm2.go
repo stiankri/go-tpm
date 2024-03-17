@@ -450,6 +450,36 @@ type ECDHZGenResponse struct {
 	OutPoint TPM2BECCPoint
 }
 
+// Hmac is the input to TPM2_HMAC.
+// See definition in Part 3, Commands, section 15.5.2
+type Hmac struct {
+	// HMAC key handle requiring an authorization session for the USER role
+	Handle AuthHandle `gotpm:"handle,auth"`
+	// HMAC data
+	Buffer TPM2BMaxBuffer
+	// the hash algorithm to use for the hmac
+	HashAlg TPMIAlgHash
+}
+
+// Command implements the Command interface.
+func (Hmac) Command() TPMCC { return TPMCCHMAC }
+
+// Execute executes the command and returns the response.
+func (cmd Hmac) Execute(t transport.TPM, s ...Session) (*HmacResponse, error) {
+	var rsp HmacResponse
+	if err := execute[HmacResponse](t, cmd, &rsp, s...); err != nil {
+		return nil, err
+	}
+	return &rsp, nil
+}
+
+// HmacResponse is the response from TPM2_HMAC.
+// See definition in Part 3, Commands, section 15.5.2
+type HmacResponse struct {
+	// the returned hmac
+	OutHmac TPM2BDigest
+}
+
 // Hash is the input to TPM2_Hash.
 // See definition in Part 3, Commands, section 15.4
 type Hash struct {
